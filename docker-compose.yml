@@ -1,0 +1,11 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - 1433:1433
+    environment:
+      - "ACCEPT_EULA=Y"
+      - "MSSQL_SA_PASSWORD=Foo_bar_3"
+    hostname: hostname
+    container_name: sql1
+    
