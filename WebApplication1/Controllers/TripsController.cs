@@ -1,6 +1,8 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Context;
+using WebApplication1.Models;
 
 namespace WebApplication1.Controllers;
 
@@ -8,12 +10,10 @@ namespace WebApplication1.Controllers;
 [ApiController]
 public class TripsController(TripsContext context) : ControllerBase
 {
-    private readonly TripsContext _context = context;
-
     [HttpGet]
     public IActionResult GetTrips(int page = 0, int pageSize = 10)
     {
-        var trips = _context.Trips
+        var trips = context.Trips
             .Include(p => p.IdCountries)
             .Include(p => p.ClientTrips)
             .Select(t => new TripDto(
@@ -30,12 +30,61 @@ public class TripsController(TripsContext context) : ControllerBase
             .Take(pageSize)
             .ToList();
 
-        var allTripsCount = _context.Trips.Count();
+        var allTripsCount = context.Trips.Count();
 
         var pageWrapper = new Page<TripDto>(
             page, pageSize, (int)Math.Ceiling(allTripsCount / (double)pageSize), trips
         );
         return Ok(pageWrapper);
+    }
+
+    [HttpPost("{tripId:int}/clients")]
+    public IActionResult AssignClientToTrip(int tripId, ClientTripDto request)
+    {
+        //imo there is an issue in exercise description - point 1. and message body suggest that the endpoint should create client resources but point 2. suggest that it should not. 
+        //I assume that the endpoint creates client and there can be only one client with given pesel in system so validation from point 2. can be skipped + unique constraint on db can be added
+
+        if (context.Clients.FirstOrDefault(c => c.Pesel == request.Pesel) != null)
+        {
+            return BadRequest("Client with given pesel already exist");
+        }
+
+        var clientEntity = new Client()
+        {
+            Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Pesel = request.Pesel,
+            Telephone = request.Telephone
+        };
+        context.Clients.Add(clientEntity);
+        
+        var trip = context.Trips.FirstOrDefault(t => t.IdTrip == tripId);
+        if (trip == null)
+        {
+            return BadRequest("Trip with given id doesn't exist");
+        }
+        if (trip.DateFrom > DateTime.Now)
+        {
+            return BadRequest("Given trip already started");
+        }
+
+        if (context.ClientTrips.FirstOrDefault(t => t.IdClient == context.Clients.FirstOrDefault(c => c.Pesel == request.Pesel).IdClient && t.IdTrip == tripId) != null)
+        {
+            return BadRequest("The client is already assigned to the trip");
+        }
+
+        var entity = new ClientTrip
+        {
+            IdClientNavigation = clientEntity,
+            IdTrip = trip.IdTrip,
+            PaymentDate = request.PaymentDate,
+            RegisteredAt = DateTime.Now
+        };
+
+        context.ClientTrips.Add(entity);
+        context.SaveChanges();
+        return Created();
     }
 
     public class TripDto(
@@ -84,5 +133,23 @@ public class TripsController(TripsContext context) : ControllerBase
         public int PageSize => pageSize;
         public int AllPages => allPages;
         public ICollection<TV> Content => content;
+    }
+
+    public class ClientTripDto(
+        [Required] [StringLength(120)] string firstName,
+        [Required] [StringLength(120)] string lastName,
+        [Required] [EmailAddress] string email,
+        [Required] [StringLength(120)] string telephone,
+        [Required] [StringLength(120)] string pesel,
+        DateTime paymentDate
+    )
+    {
+        //in exercise descriptions there is also tripId + tripName in request body, but they don't make sens in reqeust body
+        public string FirstName => firstName;
+        public string LastName => lastName;
+        public string Email => email;
+        public string Telephone => telephone;
+        public string Pesel => pesel;
+        public DateTime PaymentDate => paymentDate;
     }
 }
