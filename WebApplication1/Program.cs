@@ -10,7 +10,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
 var connectionString = builder.Configuration.GetConnectionString("MyAppCs");
-builder.Services.AddDbContext<ClinicContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<TripsContext>(options => options.UseSqlServer(connectionString));
     
 var app = builder.Build();
 
