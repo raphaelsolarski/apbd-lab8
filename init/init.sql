@@ -80,5 +80,3 @@ INSERT INTO Client_Trip (IdClient, IdTrip, RegisteredAt, PaymentDate) VALUES (1,
 INSERT INTO Country (Name) VALUES ('Polska');
 
 INSERT INTO Country_Trip (IdCountry, IdTrip) VALUES (1, 1);
-
-
