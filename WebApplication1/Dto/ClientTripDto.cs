@@ -3,19 +3,13 @@ using System.ComponentModel.DataAnnotations;
 namespace WebApplication1.Dto;
 
 public class ClientTripDto(
-    [Required] [StringLength(120)] string firstName,
-    [Required] [StringLength(120)] string lastName,
-    [Required] [EmailAddress] string email,
-    [Required] [StringLength(120)] string telephone,
-    [Required] [StringLength(120)] string pesel,
-    DateTime paymentDate
 )
 {
     //in exercise descriptions there is also tripId + tripName in request body, but they don't make sens in reqeust body
-    public string FirstName => firstName;
-    public string LastName => lastName;
-    public string Email => email;
-    public string Telephone => telephone;
-    public string Pesel => pesel;
-    public DateTime PaymentDate => paymentDate;
+    [Required] [StringLength(120)] public string FirstName { get; set; }
+    [Required] [StringLength(120)] public string LastName { get; set; }
+    [Required] [EmailAddress] public string Email { get; set; }
+    [Required] [StringLength(120)] public string Telephone { get; set; }
+    [Required] [StringLength(120)] public string Pesel { get; set; }
+    public DateTime? PaymentDate { get; set; }
 }
