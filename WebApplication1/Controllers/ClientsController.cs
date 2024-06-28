@@ -1,35 +1,23 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using WebApplication1.Context;
+using WebApplication1.Services;
 
 namespace WebApplication1.Controllers;
 
 [Route("/api/clients")]
 [ApiController]
-public class ClientsController(TripsContext context) : ControllerBase
+public class ClientsController(IClientsService clientsService) : ControllerBase
 {
-    private readonly TripsContext _context = context;
-    
     [HttpDelete("{id:int}")]
     public IActionResult DeleteClient(int id)
     {
-        var client = _context.Clients
-            .Include(c => c.ClientTrips)
-            .FirstOrDefault(c => c.IdClient == id);
-
-        if (client != null)
+        try
         {
-            if (!client.ClientTrips.IsNullOrEmpty())
-            {
-                return BadRequest("Client with existing trips can't be deleted");
-            }
-            _context.Remove(client);
-            _context.SaveChanges();
+            clientsService.DeleteClient(id);
+            return NoContent();
         }
-        
-        return NoContent();
+        catch (CanNotDeleteClientWithExistingTripsException e)
+        {
+            return BadRequest("Client with existing trips can't be deleted");
+        }
     }
-
-    
 }

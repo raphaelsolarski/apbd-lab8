@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Context;
+using WebApplication1.Repository;
+using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,12 @@ builder.Services.AddControllers();
 
 var connectionString = builder.Configuration.GetConnectionString("MyAppCs");
 builder.Services.AddDbContext<TripsContext>(options => options.UseSqlServer(connectionString));
+
+builder.Services.AddScoped<IClientsRepository, ClientsRepository>();
+builder.Services.AddScoped<IClientsService, ClientsService>();
+
+builder.Services.AddScoped<ITripsRepository, TripsRepository>();
+builder.Services.AddScoped<ITripsService, TripsService>();
     
 var app = builder.Build();
 
